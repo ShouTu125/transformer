@@ -13,6 +13,7 @@ class Trainer(object):
       self.logger = logger
       if self.logger is None:
          self.logger = logging.getLogger(__name__)
+         self.logger.setLevel(logging.DEBUG)
       
       self.model = model
       self.optimizer = optimizer

@@ -19,7 +19,6 @@ def test_train():
 
     # model 
     model = make_model(V, V, 6)
-    print(model)
 
     # optimizer and loss_fn
     param = [p for p in model.parameters() if p.requires_grad]

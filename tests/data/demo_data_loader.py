@@ -4,8 +4,6 @@ import torch.utils.data
 
 import numpy as np
 
-import random
-
 class DemoDataset(torch.utils.data.IterableDataset):
     def __init__(self, V, l, max_seq_length=100):
         self.V = V
