@@ -1,2 +1,6 @@
 *.pth
-.py_cache
+__pycache__
+.pytest_cache
+*.csv
+*.pth
+*.pkl

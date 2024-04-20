@@ -108,7 +108,7 @@ class SublayerConnection(torch.nn.Module):
         super(SublayerConnection, self).__init__()
 
         self.norm = LayerNorm(size)
-        self.dropout = dropout
+        self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, x, sublayer): 
         # 子层残差连接
@@ -179,7 +179,7 @@ class Decoder(torch.nn.Module):
         super(Decoder, self).__init__()
 
         self.layers = clone_module(layer, N)
-        self.norm = layer.size
+        self.norm = LayerNorm(layer.size)
 
     def forward(self, x, memory, src_mask, tgt_mask):
         for layer in self.layers:
@@ -203,10 +203,10 @@ class PositionwiseFeedForward(torch.nn.Module):
 
 # 输入输出嵌入层
 class Embeddings(torch.nn.Module):
-    def __init__(self, d_model, vocab):
+    def __init__(self, d_model, vocab_size):
         super(Embeddings, self).__init__()
 
-        self.lut = torch.nn.Embedding(vocab, d_model)
+        self.lut = torch.nn.Embedding(vocab_size, d_model)
         self.d_model = d_model
 
     def forward(self, x):
@@ -242,7 +242,7 @@ class PositionEncoding(torch.nn.Module):
         self.register_buffer('pe', pe)
 
     def forward(self, x):
-        x = x + self.pe[:x.size(0), :]
+        x = x + self.pe[:x.size(1), :]
         return self.dropout(x)
     
 
@@ -282,35 +282,36 @@ class Transformer(torch.nn.Module):
 
 
 # 定义模型
-def make_model(src_vocab, tgt_vocab, N=6, d_model=512, d_ff=2048, h=8, dropout=0.1):
+def make_model(src_vocab_size, tgt_vocab_size, n_layers=6, d_model=512, d_ff=2048, n_heads=8, dropout=0.1):
     """
     make model
 
     Args:
-        src_vocab (int): source vocab size
-        tgt_vocab (int): target vocab size
-        N (int): number of encoder/decoder layers
+        src_vocab_size (int): source vocab size
+        tgt_vocab_size (int): target vocab size
+        n_layers (int): number of encoder/decoder layers
         d_model (int): model dimension
         d_ff (int): feed-forward dimension
-        h (int): number of heads
+        n_heads (int): number of heads
         dropout (float): dropout
 
     Returns:
         model (Transformer)
     """
     c = copy.deepcopy
-    attn = MultiHeadAttention(h=h, d_model=d_model)
+    attn = MultiHeadAttention(h=n_heads, d_model=d_model)
     ff = PositionwiseFeedForward(d_model=d_model, d_ff=d_ff)
     position = PositionEncoding(d_model=d_model, dropout=dropout)
 
-    gen = Generator(d_model=d_model, vocab=tgt_vocab)
+
+    gen = Generator(d_model=d_model, vocab=tgt_vocab_size)
 
     model = Transformer(
-        Encoder(EncoderLayer(d_model, c(attn), c(ff), dropout), N),
-        Decoder(DecoderLayer(d_model, c(attn), c(attn), c(ff), dropout), N),
+        Encoder(EncoderLayer(d_model, c(attn), c(ff), dropout), n_layers),
+        Decoder(DecoderLayer(d_model, c(attn), c(attn), c(ff), dropout), n_layers),
 
-        torch.nn.Sequential(Embeddings(d_model, src_vocab), c(position)),
-        torch.nn.Sequential(Embeddings(d_model, tgt_vocab), c(position)),
+        torch.nn.Sequential(Embeddings(d_model, src_vocab_size), c(position)),
+        torch.nn.Sequential(Embeddings(d_model, tgt_vocab_size), c(position)),
 
         gen,
     )

@@ -1,7 +1,7 @@
-import pytest
+
 import torch
 
-from src.transformer import make_model
+from src.model.transformer import make_model
 
 def test_make_model():
     model = make_model(10, 10, 2)
@@ -13,4 +13,8 @@ def test_make_model():
 
     model.eval()
 
-    
+
+# 测试清除
+def test_clean():
+    import os
+    os.remove('test_transformer.pth')
