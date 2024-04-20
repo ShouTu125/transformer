@@ -6,7 +6,6 @@ import numpy as np
 
 from model import make_model
 from trainer import TranslateTrainer 
-from data import WmtZhEnTextPairDataloader as DataLoader
 
 from config import Config, Logger
 from utils import get_optimizer, initialize_weights, Vocab
@@ -14,10 +13,10 @@ from utils import get_optimizer, initialize_weights, Vocab
 parser = argparse.ArgumentParser()
 
 # dataset parameter
-parser.add_argument('--train_data', type=str, default='dataset/wmt_zh_en/train_10k.csv')
-parser.add_argument('--validation_data', type=str, default='dataset/wmt_zh_en/validation.csv')
-parser.add_argument('--src_vocab', type=str, default='dataset/wmt_zh_en/zh_vocab.pkl')
-parser.add_argument('--tgt_vocab', type=str, default='dataset/wmt_zh_en/en_vocab.pkl')
+parser.add_argument('--train_data', type=str, default='')
+parser.add_argument('--validation_data', type=str, default='')
+parser.add_argument('--src_vocab', type=str, default='')
+parser.add_argument('--tgt_vocab', type=str, default='')
 parser.add_argument('--shuffle', type=bool, default=True)
 parser.add_argument('--batch_size', type=int, default=32)
 
@@ -45,7 +44,7 @@ parser.add_argument('--log_step', type=int, default=20)
 # config
 parser.add_argument('--config_file', type=str, default='./config.json')
 #log
-parser.add_argument('--log_path', type=str, default='./logs/model.log')
+parser.add_argument('--log_path', type=str, default='./model.log')
 parser.add_argument('--log_level', type=str, choices=['FATAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG'], default='INFO')
 # other
 parser.add_argument('--cuda', type=bool, default=torch.cuda.is_available())
@@ -54,6 +53,7 @@ parser.add_argument('--seed', type=int, default=1234)
 args = parser.parse_args()
 
 logger = Logger(__name__, level=args.log_level, log_path=args.log_path)
+
 cfg = Config(logger=logger, args=args)
 cfg.print_config()
 cfg.save_config(cfg.config['config_file'])
@@ -66,21 +66,19 @@ np.random.seed(cfg.config['seed'])
 
 # vocab
 src_vocab = Vocab()
-src_vocab.load(cfg.config['src_vocab'])
+src_vocab.build(['我 是 兔兔，你 是 谁 ？'])
 tgt_vocab = Vocab()
-tgt_vocab.load(cfg.config['tgt_vocab'])
+tgt_vocab.build(['i am rabbit , who are you ?'])
 
 # data_loader
-train_data_loader =  DataLoader(cfg.config['train_data'], cfg.config['batch_size'], cfg.config['shuffle'])
+from data.demo_data_loader import DemoDataloader
+train_data_loader =  DemoDataloader(cfg.config['batch_size'], V=11, l=10000, max_seq_length=10)
 validation_data_loader = None
-if cfg.config.get('validation_data', None) is None:
-    validation_data_loader = DataLoader(cfg.config['validation_data'], cfg.config['batch_size'], cfg.config['shuffle'])
 
-# model 
-device = 'cuda:0' if cfg.config['cuda'] else 'cpu'
+# model
 model = make_model(len(src_vocab), len(tgt_vocab), cfg.config['n_layers'], 
                    cfg.config['d_model'], cfg.config['d_ff'], cfg.config['n_heads'], cfg.config['dropout'])
-model.to(device)
+
 logger.debug(model)
 
 # optimizer and loss_fn
@@ -91,7 +89,7 @@ loss_fn = nn.CrossEntropyLoss(ignore_index=tgt_vocab.word2id['<pad>'])
 #trainer
 model.apply(initialize_weights)
 trainer = TranslateTrainer(model=model, optimizer=optimizer, loss_fn=loss_fn, cfg=cfg.config, 
-                           train_data=train_data_loader, validation_data=validation_data_loader, logger=Logger)
+                           train_data=train_data_loader, validation_data=validation_data_loader, logger=logger)
 
 if __name__ == '__main__':
     trainer.train()

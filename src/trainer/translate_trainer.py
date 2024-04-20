@@ -3,7 +3,7 @@ from torch.nn import functional as F
 
 from .trainer import Trainer
 
-from src.utils.mask import make_src_mask, make_tgt_mask
+from utils.mask import make_src_mask, make_tgt_mask
 
 class TranslateTrainer(Trainer):
     def __init__(self, model, optimizer, loss_fn, cfg, train_data, validation_data = None, test_data = None, 
@@ -20,6 +20,8 @@ class TranslateTrainer(Trainer):
                 self.device = 'cuda'
             if torch.backends.mps.is_available():
                 self.device = 'mps'
+        
+        logger.info(f'Device is {self.device}')
         
         model.to(self.device)
 

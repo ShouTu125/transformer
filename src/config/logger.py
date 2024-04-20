@@ -23,15 +23,15 @@ class Logger(object):
         self.logger.addHandler(file_handler)
         self.logger.addHandler(stream_handler)
 
-    def info(self, message):
-        self.logger.info(message)
+    def info(self, msg):
+        self.logger.info(msg)
 
-    def debug(self, message):
-        self.logger.debug(message)
+    def debug(self, meg):
+        self.logger.debug(meg)
 
-    def warning(self, message):
-        self.logger.warning(message)
+    def warning(self, msg):
+        self.logger.warning(msg)
     
-    def error(self, message):
-        self.logger.error(message)
+    def error(self, msg):
+        self.logger.error(msg)
     

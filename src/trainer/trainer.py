@@ -29,7 +29,7 @@ class Trainer(object):
       
       self.cfg = cfg
       self.epochs = cfg.get('epochs', 10)
-      self.save_epochs = cfg.get('save_epochs', 1)
+      self.save_epochs = cfg.get('save_epochs', 10)
       self.early_stop = cfg.get('early_stop', False)
       self.best_val_loss = None
       self.save_dir = cfg.get('save_dir', './')
