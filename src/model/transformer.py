@@ -46,11 +46,10 @@ def scaled_dot_product_attention(q, k, v, mask = None, dropout = None):
     d_k = q.size(-1)
     # 注意力分数矩阵
     scores = torch.matmul(q, k.transpose(-2, -1)) / math.sqrt(d_k)
-
     # 加掩码
     if mask is not None:
-        scores = scores.masked_fill(mask == 0, -1e9)
-
+        scores = scores.masked_fill(mask, -1e9)
+    
     p = F.softmax(scores, dim=-1)
     
     if dropout is not None:
@@ -84,9 +83,6 @@ class MultiHeadAttention(torch.nn.Module):
         self.dropout = torch.nn.Dropout(p=dropout)
 
     def forward(self, q, k, v, mask = None):
-        if mask is not None:
-            mask = mask.unsqueeze(1)
-
         nbatches = q.size(0)
 
         # 将输入最后一层转化成 d_model -> h * d_k
@@ -255,7 +251,7 @@ class Generator(torch.nn.Module):
         self.proj = torch.nn.Linear(d_model, vocab)
 
     def forward(self, x):
-        return F.log_softmax(self.proj(x), dim=-1)
+        return self.proj(x)
 
 class Transformer(torch.nn.Module):
     """

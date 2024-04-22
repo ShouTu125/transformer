@@ -9,7 +9,7 @@ class Config(object):
     def save_config(self, path):
         with open(path, 'w') as f:
             json.dump(self.config, f, indent=2)
-        self.logger.debug('Config saved to file {path}')
+        self.logger.debug(f'Config saved to file {path}')
 
     def load_config(self, path):
         with open(path) as f:

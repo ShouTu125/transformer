@@ -33,7 +33,7 @@ parser.add_argument('--optimizer', choices=['sgd', 'adam', 'adamax'], default='a
 parser.add_argument('--l2', type=float, default=0.0)
 
 # train parameter
-parser.add_argument('--epochs', type=int, default=100)
+parser.add_argument('--epochs', type=int, default=10)
 parser.add_argument('--save_dir', type=str, default='./saved_models')
 parser.add_argument('--save_epochs', type=int, default=5, help='Save model checkpoints every k epochs.')
 parser.add_argument('--early_stop', type=bool, default=True)
@@ -45,7 +45,7 @@ parser.add_argument('--log_step', type=int, default=20)
 parser.add_argument('--config_file', type=str, default='./config.json')
 #log
 parser.add_argument('--log_path', type=str, default='./model.log')
-parser.add_argument('--log_level', type=str, choices=['FATAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG'], default='INFO')
+parser.add_argument('--log_level', type=str, choices=['FATAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG'], default='DEBUG')
 # other
 parser.add_argument('--cuda', type=bool, default=torch.cuda.is_available())
 parser.add_argument('--seed', type=int, default=1234)
@@ -64,19 +64,13 @@ torch.cuda.manual_seed(cfg.config['seed'])
 torch.backends.cudnn.enabled = False
 np.random.seed(cfg.config['seed'])
 
-# vocab
-src_vocab = Vocab()
-src_vocab.build(['我 是 兔兔，你 是 谁 ？'])
-tgt_vocab = Vocab()
-tgt_vocab.build(['i am rabbit , who are you ?'])
-
 # data_loader
 from data.demo_data_loader import DemoDataloader
 train_data_loader =  DemoDataloader(cfg.config['batch_size'], V=11, l=10000, max_seq_length=10)
-validation_data_loader = None
+validation_data_loader =  DemoDataloader(cfg.config['batch_size'], V=10, l=10000, max_seq_length=10)
 
 # model
-model = make_model(len(src_vocab), len(tgt_vocab), cfg.config['n_layers'], 
+model = make_model(10, 10, cfg.config['n_layers'], 
                    cfg.config['d_model'], cfg.config['d_ff'], cfg.config['n_heads'], cfg.config['dropout'])
 
 logger.debug(model)
@@ -84,7 +78,7 @@ logger.debug(model)
 # optimizer and loss_fn
 param = [p for p in model.parameters() if p.requires_grad]
 optimizer = get_optimizer(cfg.config['optimizer'], param, lr=cfg.config['lr'])
-loss_fn = nn.CrossEntropyLoss(ignore_index=tgt_vocab.word2id['<pad>'])
+loss_fn = nn.CrossEntropyLoss(ignore_index=0)
 
 #trainer
 model.apply(initialize_weights)
